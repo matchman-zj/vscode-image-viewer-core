@@ -1,41 +1,108 @@
 {
-  "name": "image-viewer-core",
-  "displayName": "image-viewer-core",
-  "description": "image-viewer 插件的核心组件",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.102.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "image-viewer-core.helloWorld",
-        "title": "Hello World"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.102.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "@typescript-eslint/eslint-plugin": "^8.31.1",
-    "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3",
-    "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
-  }
+    "name": "image-viewer-core",
+    "displayName": "image-viewer-core",
+    "description": "image-viewer 插件的核心组件",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/matchman-zj/image-viewer-core.git"
+    },
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.102.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "main": "./out/extension.js",
+    "extensionKind": [
+        "workspace"
+    ],
+    "activationEvents": [
+        "onCommand:image-viewer.saveImage"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "image-viewer.saveImage",
+                "title": "save tiff image"
+            }
+        ],
+        "menus": {
+            "debug/variables/context": [
+                {
+                    "command": "image-viewer.saveImage",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "image viewer Config",
+            "properties": {
+                "image-viewer.imageClassName": {
+                    "type": "string",
+                    "default": "{'MyImage': '.', 'MyImage &': '.', 'MyImage &&': '.', 'MyImage *': '->'}",
+                    "description": "自定义图像类型，以及访问成员时使用的访问符号"
+                },
+                "image-viewer.imageDataPtrName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "自定义图像中表示图像数据的变量名"
+                },
+                "image-viewer.imageWidthName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "自定义图像中表示宽度的变量名"
+                },
+                "image-viewer.defaultWidth": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "如果未设置 自定义图像中表示宽度的变量名，则使用此处指定的宽度"
+                },
+                "image-viewer.imageHeightName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "自定义图像中表示高度的变量名"
+                },
+                "image-viewer.defaultHeight": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "如果未设置 自定义图像中表示高度的变量名，则使用此处指定的高度"
+                },
+                "image-viewer.BitsPerPixelName": {
+                    "type": "string",
+                    "default": "",
+                    "description": "自定义图像中表示图像位深的变量名，位深值必须为8的整数倍"
+                },
+                "image-viewer.defaultBitsPerPixel": {
+                    "type": "number",
+                    "default": 8,
+                    "description": "如果未设置 自定义图像中表示图像位深的变量名，则使用此处指定的位深，位深值必须为 8, 16, 24, 32"
+                },
+                "image-viewer.TempImgPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "保存临时图像的路径，保存的格式为tiff"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.102.0",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "20.x",
+        "@typescript-eslint/eslint-plugin": "^8.31.1",
+        "@typescript-eslint/parser": "^8.31.1",
+        "eslint": "^9.25.1",
+        "typescript": "^5.8.3",
+        "@vscode/test-cli": "^0.0.11",
+        "@vscode/test-electron": "^2.5.2"
+    }
 }
