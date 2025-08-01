@@ -1,12 +1,17 @@
 {
     "name": "image-viewer-core",
     "displayName": "image-viewer-core",
+    "icon": "resource/sawtooth_2_sin_3.png",
     "description": "image-viewer 插件的核心组件",
+    "version": "1.0.1",
+    "publisher": "ZouJun",
+    "author": {
+        "name": "ZouJun"
+    },
     "repository": {
         "type": "git",
-        "url": "https://github.com/matchman-zj/image-viewer-core.git"
+        "url": "https://github.com/matchman-zj/vscode-image-viewer-core.git"
     },
-    "version": "0.0.1",
     "engines": {
         "vscode": "^1.102.0"
     },
