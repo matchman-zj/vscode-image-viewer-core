@@ -17,47 +17,6 @@ async function evaluateMember(
     return result.result;
 }
 
-function getWebviewContent(base64Data: string): string {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-</head>
-<body>
-  <h3>Debug Image Viewer (10x10)</h3>
-  <canvas id="canvas" width="10" height="10" style="image-rendering: pixelated; border: 1px solid #ccc;"></canvas>
-
-  <script>
-    const base64 = "${base64Data}";
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    console.log('解码后字节数组:', bytes);
-
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const imageData = ctx.createImageData(10, 10);
-    const data = imageData.data;
-
-    for (let i = 0; i < 100; i++) {
-      const v = bytes[i] * 25; // 你设置的是 0~9，所以放大对比度
-      data[i * 4 + 0] = v; // R
-      data[i * 4 + 1] = v; // G
-      data[i * 4 + 2] = v; // B
-      data[i * 4 + 3] = 255; // A
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-  </script>
-</body>
-</html>
-`;
-}
-
 function createTIFF(
     width: number,
     height: number,
@@ -235,7 +194,20 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             const img_height_name = view_config.get<string>("imageHeightName", "");
             const img_bits_per_pixel_name = view_config.get<string>("BitsPerPixelName", "");
 
-            const data_memory_ref = await evaluateMember(session, formatExpression(vari_name, link_str, img_data_name), frame_id);
+            const result = await session.customRequest('evaluate', {
+                expression: formatExpression(vari_name, link_str, img_data_name),
+                frameId: frame_id,
+                context: 'watch'
+            });
+            if (!('memoryReference' in result)) {
+                vscode.window.showWarningMessage(`imageDataPtr is not found: ${result}`);
+                return;
+            }
+            const data_memory_ref = result.memoryReference;
+            if (isNaN(Number(data_memory_ref))) {
+                vscode.window.showWarningMessage(`imageDataPtr is ${data_memory_ref}`);
+                return;
+            }
 
             let img_width = 0;
             if (img_width_name === "") {
@@ -243,6 +215,10 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             }
             else {
                 img_width = await evaluateMember(session, formatExpression(vari_name, link_str, img_width_name), frame_id);
+            }
+            if (isNaN(Number(img_width))) {
+                vscode.window.showWarningMessage(`imageDataPtr is ${img_width}`);
+                return;
             }
 
             let img_height = 0;
@@ -252,6 +228,10 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             else {
                 img_height = await evaluateMember(session, formatExpression(vari_name, link_str, img_height_name), frame_id);
             }
+            if (isNaN(Number(img_height))) {
+                vscode.window.showWarningMessage(`imageDataPtr is ${img_height}`);
+                return;
+            }
 
             let bits_per_pixel = 0;
             if (img_bits_per_pixel_name === "") {
@@ -259,6 +239,10 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             }
             else {
                 bits_per_pixel = await evaluateMember(session, formatExpression(vari_name, link_str, img_bits_per_pixel_name), frame_id);
+            }
+            if (isNaN(Number(bits_per_pixel))) {
+                vscode.window.showWarningMessage(`imageDataPtr is ${bits_per_pixel}`);
+                return;
             }
             if (bits_per_pixel % 8 !== 0 || bits_per_pixel <= 0 || bits_per_pixel > 32) {
                 vscode.window.showWarningMessage('bits_per_pixel must be multiple of 8, 16, 24, 32');
