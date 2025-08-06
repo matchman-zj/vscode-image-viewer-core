@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { register_saveImage } from './save_image';
+import { register_saveImage, viewerLog } from './save_image';
 
 export function activate(context: vscode.ExtensionContext) {
     const isRemote = vscode.env.remoteName !== undefined;
-    console.log(`image-viewer:save activated in ${isRemote ? 'remote' : 'local'} mode`);
+    viewerLog(`image-viewer-core activated in ${isRemote ? 'remote' : 'local'} mode`);
 
     // register_showImage(context);
     register_saveImage(context);

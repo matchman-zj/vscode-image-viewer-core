@@ -3,6 +3,13 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
+const outputChannel = vscode.window.createOutputChannel('image-viewer');
+
+export function viewerLog(message: string) {
+    const timestamp = new Date().toISOString();
+    outputChannel.appendLine(`[${timestamp}] ${message}`);
+}
+
 async function evaluateMember(
     session: vscode.DebugSession,
     mem_expression: string,
@@ -107,9 +114,9 @@ function formatExpression(vari_name: string, link_str: string, mem_name: string)
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function register_saveImage(context: vscode.ExtensionContext) {
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
+    // Use the console to output diagnostic information (viewerLog) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('[extension] image-viewer:save is now active!');
+    viewerLog('[extension] image-viewer-core is now registered!');
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand
@@ -194,10 +201,11 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             const img_height_name = view_config.get<string>("imageHeightName", "");
             const img_bits_per_pixel_name = view_config.get<string>("BitsPerPixelName", "");
 
+            // 读取图像数据指针
+            const img_data_ptr_expr = formatExpression(vari_name, link_str, img_data_name);
+            viewerLog(`img_data_ptr_expr is ${img_data_ptr_expr}`);
             const result = await session.customRequest('evaluate', {
-                expression: formatExpression(vari_name, link_str, img_data_name),
-                frameId: frame_id,
-                context: 'watch'
+                expression: img_data_ptr_expr, frameId: frame_id, context: 'watch'
             });
             if (!('memoryReference' in result)) {
                 vscode.window.showWarningMessage(`imageDataPtr is not found: ${result}`);
@@ -208,19 +216,25 @@ export function register_saveImage(context: vscode.ExtensionContext) {
                 vscode.window.showWarningMessage(`imageDataPtr is ${data_memory_ref}`);
                 return;
             }
+            viewerLog(`imageDataPtr is ${data_memory_ref}`);
 
+            // 读取图像宽度
             let img_width = 0;
             if (img_width_name === "") {
                 img_width = view_config.get<number>("defaultWidth", 0);
             }
             else {
-                img_width = await evaluateMember(session, formatExpression(vari_name, link_str, img_width_name), frame_id);
+                const img_width_expr = formatExpression(vari_name, link_str, img_width_name);
+                viewerLog(`img_width_expr is ${img_data_ptr_expr}`);
+                img_width = await evaluateMember(session, img_width_expr, frame_id);
             }
             if (isNaN(Number(img_width))) {
                 vscode.window.showWarningMessage(`imageDataPtr is ${img_width}`);
                 return;
             }
+            viewerLog(`img_width is ${img_width}`);
 
+            // 读取图像高度
             let img_height = 0;
             if (img_height_name === "") {
                 img_height = view_config.get<number>("defaultHeight", 0);
@@ -232,7 +246,9 @@ export function register_saveImage(context: vscode.ExtensionContext) {
                 vscode.window.showWarningMessage(`imageDataPtr is ${img_height}`);
                 return;
             }
+            viewerLog(`img_height is ${img_height}`);
 
+            // 读取图像位深
             let bits_per_pixel = 0;
             if (img_bits_per_pixel_name === "") {
                 bits_per_pixel = view_config.get<number>("defaultBitsPerPixel", 0);
@@ -248,7 +264,9 @@ export function register_saveImage(context: vscode.ExtensionContext) {
                 vscode.window.showWarningMessage('bits_per_pixel must be multiple of 8, 16, 24, 32');
                 return;
             }
+            viewerLog(`bits_per_pixel is ${bits_per_pixel}`);
 
+            // 读取图像数据
             const data_memory = await session.customRequest('readMemory', {
                 memoryReference: data_memory_ref, // 变量地址
                 offset: 0,
@@ -259,12 +277,12 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             const img_data_u8_array = Uint8Array.from(Buffer.from(base64_img_data, 'base64')); // Uint8Array 类型
 
             // 保存为临时tiff图像，并调用命令打开
-            console.log('[extension] image-viewer get data success');
+            viewerLog('[extension] image-viewer get data success');
             const temp_img_path = view_config.get<string>("TempImgPath", "");
             createTIFF(img_width, img_height, bits_per_pixel, img_data_u8_array, temp_img_path);
-            console.log(`[extension] image-viewer saved TIFF: ${temp_img_path}`);
+            viewerLog(`[extension] image-viewer saved TIFF: ${temp_img_path}`);
 
-            console.log('[extension] image-viewer will show image');
+            viewerLog('[extension] image-viewer will show image');
             await vscode.commands.executeCommand('image-viewer.showImage', {});
 
         } catch (err) {
