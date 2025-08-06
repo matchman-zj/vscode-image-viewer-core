@@ -273,15 +273,15 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             });
 
             const base64_img_data = data_memory.data; // 你得到的是 base64 编码的数据
-            const img_data_u8_array = Uint8Array.from(Buffer.from(base64_img_data, 'base64')); // Uint8Array 类型
+            const img_data = Buffer.from(base64_img_data, 'base64'); // Uint8Array 类型
 
             // 保存为临时tiff图像，并调用命令打开
             viewerLog('[extension] image-viewer get data success');
             const temp_img_path = view_config.get<string>("TempImgPath", "");
-            const tiff_data = createTIFF(img_width, img_height, bits_per_pixel, img_data_u8_array);
+            const tiff_data = createTIFF(img_width, img_height, bits_per_pixel, img_data);
 
             viewerLog('[extension] image-viewer will show image');
-            await vscode.commands.executeCommand('image-viewer.showImage', tiff_data, temp_img_path);
+            await vscode.commands.executeCommand('image-viewer.showImage', tiff_data.toString('base64'), temp_img_path);
 
         } catch (err) {
             vscode.window.showErrorMessage(`Evaluate error: ${err}`);

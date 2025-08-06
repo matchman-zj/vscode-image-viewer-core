@@ -3,7 +3,7 @@
     "displayName": "image-viewer-core",
     "icon": "resource/sawtooth_2_sin_3.png",
     "description": "image-viewer 插件的核心组件",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "publisher": "ZouJun",
     "author": {
         "name": "ZouJun"
