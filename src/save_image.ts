@@ -1,9 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 
-const outputChannel = vscode.window.createOutputChannel('image-viewer');
+
+const outputChannel = vscode.window.createOutputChannel('image-viewer-core');
 
 export function viewerLog(message: string) {
     const timestamp = new Date().toISOString();
@@ -28,9 +28,8 @@ function createTIFF(
     width: number,
     height: number,
     bits_per_sample: number,
-    data: Uint8Array,
-    filePath: string
-) {
+    data: Uint8Array
+): Buffer<ArrayBuffer> {
     if (bits_per_sample % 8 !== 0) {
         throw new Error('bits_per_sample must be multiple of 8');
     }
@@ -72,7 +71,7 @@ function createTIFF(
     ifd.writeUInt32LE(0, offset); // next IFD offset = 0
 
     const file = Buffer.concat([header, ifd, data]);
-    fs.writeFileSync(filePath, file);
+    return file;
 }
 
 function checkConfig(view_config: vscode.WorkspaceConfiguration): boolean {
@@ -279,11 +278,10 @@ export function register_saveImage(context: vscode.ExtensionContext) {
             // 保存为临时tiff图像，并调用命令打开
             viewerLog('[extension] image-viewer get data success');
             const temp_img_path = view_config.get<string>("TempImgPath", "");
-            createTIFF(img_width, img_height, bits_per_pixel, img_data_u8_array, temp_img_path);
-            viewerLog(`[extension] image-viewer saved TIFF: ${temp_img_path}`);
+            const tiff_data = createTIFF(img_width, img_height, bits_per_pixel, img_data_u8_array);
 
             viewerLog('[extension] image-viewer will show image');
-            await vscode.commands.executeCommand('image-viewer.showImage', {});
+            await vscode.commands.executeCommand('image-viewer.showImage', tiff_data, temp_img_path);
 
         } catch (err) {
             vscode.window.showErrorMessage(`Evaluate error: ${err}`);
